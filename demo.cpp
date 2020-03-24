@@ -40,9 +40,6 @@ int main()
     MatFloat Y(h, w);
     float T = get_T_PWF(3, Pfa);
 
-    ofstream Ys;
-    Ys.open("result.csv");
-
     if (f_pwf(HH, HV, VV, N, Y))
     {
         string save_Y_path = "./Y_pwf.png";
@@ -54,35 +51,34 @@ int main()
             for (int y=0;y<w;y++)
             {
                 result[x*w+y] = Y[x*w+y]>T?255:0;
-                Ys<<(int)result[x*w+y]<<',';
             }
-            Ys<<'\n';
         }
 
         string save_result_path = "./result_pwf.png";
         write_png_file(save_result_path, result);
     }
-
     
-    // MatFloat RS(h, w);
-    // float threshold = 0.06;
-    // if (f_rs(HH, HV, RS))
-    // {
-    //     string save_Y_path = "./Y_rs.png";
-    //     write_png_file(save_Y_path, (MatUint8)RS);    
+    MatFloat RS(h, w);
+    float threshold = 0.15;
+    if (f_rs(HH, HV, 5, RS))
+    {
+        string save_Y_path = "./Y_rs.png";
+        write_png_file(save_Y_path, (MatUint8)RS);    
 
-    //     MatUint8 result(h, w);
-    //     for (int x=0;x<h;x++)
-    //     {
-    //         for (int y=0;y<w;y++)
-    //         {
-    //             result[x*w+y] = RS[x*w+y]>threshold?255:0;
-    //         }
-    //     }
+        MatUint8 result(h, w);
+        for (int x=0;x<h;x++)
+        {
+            for (int y=0;y<w;y++)
+            {
+                result[x*w+y] = RS[x*w+y]>threshold?255:0;
+                if (x<5 and y<5) std::cout<<(int)result[x*w+y]<<' ';
+            }
+            if (x < 5) std::cout<<'\n';
+        }
 
-    //     string save_result_path = "./result_rs.png";
-    //     write_png_file(save_result_path, result);
-    // }
+        string save_result_path = "./result_rs.png";
+        write_png_file(save_result_path, result);
+    }
 
     // for (int i=0;i<6;i++)
     // {

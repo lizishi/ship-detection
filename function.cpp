@@ -124,19 +124,36 @@ bool f_pwf(const MatComplex & HH, const MatComplex & HV,const MatComplex & VV, i
     return true;
 }
 
-bool f_rs(const MatComplex & HH, const MatComplex & HV, MatFloat & Y)
+bool f_rs(const MatComplex & HH,const MatComplex & HV, int N, MatFloat & Y)
 {
     int h = HH.get_size1();
-    int w = HH.get_size2(); 
-    Complex ** HH_data = HH.get_data();
-    Complex ** HV_data = HV.get_data();
-    for (int i=0;i<h;i++)
+    int w = HH.get_size2();
+    int pad_num = N / 2;
+
+    MatComplex HH_padded = HH.pad(pad_num, pad_num);
+    MatComplex HV_padded = HV.pad(pad_num, pad_num);
+
+    // std::cout<<"padded Completed"<<std::endl;
+
+    int num = N * N;
+    int w1 = HH_padded.get_size2();
+    for (int i=pad_num; i<pad_num+h; i++)
     {
-        for (int j=0;j<w;j++)
+        for (int j=pad_num; j<pad_num+w; j++)
         {
-            Complex S_HH = HH_data[i][j];
-            Complex S_HV = HV_data[i][j];
-            Y[i*w + j] = (S_HH * S_HV).abs();
+            MatComplex clutter(2, num);
+            int count = 0;
+            for (int k=i-pad_num; k<=i+pad_num; k++)
+            {
+                for (int l=j-pad_num; l<=j+pad_num; l++)
+                {
+                    clutter[0*num+count] = HH_padded[k*w1+l];
+                    clutter[1*num+count] = HV_padded[k*w1+l];
+                    count++;
+                }
+            }
+            MatComplex temp = clutter * clutter.t() / num;
+            Y[(i-pad_num) * w + (j-pad_num)] = temp[1].abs() / (temp[0] + temp[3]).abs();
         }
     }
     return true;
@@ -195,7 +212,9 @@ bool write_png_file(string filename , MatUint8 out) //生成一个新的png图�
 		row_pointers[i] = new png_byte [w];
 		for (j = 0; j < w; j++) {
             row_pointers[i][j] = out[pos++];
+            if (i<5 and j<5) std::cout<<(int)row_pointers[i][j]<<' ';
 		}
+        if (i<5) std::cout<<'\n';
 	}
 	//6: 写入rgb数据到Png文件
 	png_write_image(png_ptr, (png_bytepp)row_pointers);
